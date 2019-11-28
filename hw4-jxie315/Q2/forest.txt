@@ -1,0 +1,5 @@
+1. It is because a single decision tree has the problem of overfitting, which means a tiny change in any attribute of a data opint may cause a different predicted outcome. To reduce such error, the voting in a random forest significantly averages the outcome of prediction , which decrease the variance.
+
+2. time: 241.918746034s
+
+3. accuracy: 0.9193
