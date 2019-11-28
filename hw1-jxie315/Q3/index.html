@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		
+		<meta charset="utf-8">
+                 <script type = "text/javascript" src="lib/d3/d3.min.js"> //Change this in the hw</script>
+		<style type="text/css">
+				
+			
+		</style>
+		<title>Lego Sets by Year from Rebrickable</title>
+	</head>
+	<body>
+	<script type="text/javascript">
+
+
+var w = 1500;
+var h = 700;
+var barPadding = 5;
+var svg = d3.select("body")
+.append("svg")
+.attr("width", w)
+.attr("height", h);
+
+var padding_hor =50;
+var padding_ver=40;
+var formatYear= d3.timeParse("%Y");
+
+
+
+
+d3.dsv(",", "q3.csv", function(d){ return {year: formatYear(d.year), running_total: +d.running_total };})
+.then(function(d){
+console.log(d);
+var unit_width=(w-padding_ver*2)/d.length;
+
+
+
+var hScale= d3.scaleLinear()
+.domain([d3.min(d, function(data){return data.running_total;}), d3.max(d, function(data){return data.running_total;})])
+.range([0,h]);
+
+var xScale = d3.scaleTime()
+.domain([d3.min(d, function(data){return data.year}), d3.max(d, function(data){return data.year})])
+.range([padding_hor,w])
+
+//Missing a time scale function of x
+
+var yScale = d3.scaleLinear()
+.domain([d3.min(d, function(data){return data.running_total;}), d3.max(d, function(data){return data.running_total;})])
+.range([h,0]);
+
+var yAxis =d3.axisLeft();
+
+yAxis.scale(yScale).ticks(10);
+
+var xAxis=d3.axisBottom()
+.scale(xScale)
+.ticks(d3.timeYear.every(3));
+
+
+
+
+
+svg.selectAll("rect")
+.data(d)
+.enter()
+.append("rect")
+.attr("x", function(data, i){ return (xScale(data.year));})
+.attr("y", function(data){return yScale(data.running_total)-padding_ver ;})
+.attr("width", ((w-padding_hor)/d.length) *0.90)
+.attr("height", function(data){return hScale(data.running_total);})
+.attr("fill", "#4d94ff");
+
+
+
+
+svg.append("g")
+.attr("class","axis")
+.attr("transform", "translate(" +(padding_hor) +", " + -padding_ver+")")
+.call(yAxis);
+
+svg.append("g")
+.attr("class", "asis")
+.attr("transform", "translate(0,"+(h-padding_ver) +")")
+.call(xAxis);
+
+
+svg.append("text")
+.attr("x", (w/2))
+.attr("y", 20)
+.attr("text-anchor", "middle")
+.text("Lego Sets by Year from Rebrickable");
+
+
+svg.append("text")
+.attr("x", w-30)
+.attr("y", h-5)
+.attr("text-anchor", "middle")
+.style("font-size", "14px")
+.text("jxie315");
+
+
+} );
+
+
+
+
+
+
+
+
+
+           
+        </script>
+	</body>
+</html>
