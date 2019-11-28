@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script type= "text/javascript "src="../lib/d3.v5.min.js"></script>
+<style type ="text/css">
+
+	.line{
+		fill: none;
+		stroke: #ffab00;
+		stroke-width:3; 
+	}
+
+	.overlay
+	{
+		fill: none;
+		pointer-events:all;
+
+
+	}
+
+	.dot
+	{
+		fill: none
+		stroke: steelblue;
+	}
+
+@media print {
+  .pagebreak {
+      clear: both;
+      page-break-after: always;
+  }
+}
+
+
+</style>
+</head>
+<body>
+
+
+
+
+	<script type = "text/javascript">
+  var margin = {top:50, right: 200, bottom:100, left:100},
+  width = window.innerWidth -margin.left-margin.right,
+  height = window.innerHeight - margin.top - margin.bottom;
+
+
+
+
+
+
+ var formatYear = d3.timeParse("%Y");
+
+var svg1=d3.select("body").append("svg") //For the first graph
+.attr("width", width+margin.left+margin.right)
+.attr("height", height +margin.top + margin.bottom).append("g")
+.attr("transform", "translate(" +margin.left + "," + margin.top+ ")");
+
+
+var svg2=d3.select("body").append("svg") // for the second graph
+.attr("width", width+margin.left+margin.right)
+.attr("height", height +margin.top + margin.bottom).append("g")
+.attr("transform", "translate(" +margin.left + "," + margin.top+ ")");
+
+
+var svg3=d3.select("body").append("svg") // for the third graph
+.attr("width", width+margin.left+margin.right)
+.attr("height", height +margin.top + margin.bottom).append("g")
+.attr("transform", "translate(" +margin.left + "," + margin.top+ ")");
+
+
+var svg4=d3.select("body").append("svg") // for the forth graph
+.attr("width", width+margin.left+margin.right)
+.attr("height", height +margin.top + margin.bottom).append("g")
+.attr("transform", "translate(" +margin.left + "," + margin.top+ ")");
+
+//for the first graph 
+d3.dsv(",", "../Q3/earthquakes.csv", function(d){return {year: formatYear(d.year), beyong_eight : +d["8.0+"], beyong_seven : +d["7_7.9"], beyong_six : +d["6_6.9"],beyong_five : + d["5_5.9"], estimated_deaths : +d["Estimated Deaths"]};  }).then(function(data){
+
+console.log(data);
+n = data.length;
+  //Scale our x
+var xscale = d3.scaleTime()
+.domain([d3.min(data, function(d){return d.year}), d3.max(data, function(d){return d.year})]) //It might be changed to n-1 if the outcome is not correct
+.range([0,width]);
+
+
+// Scale our y
+
+var yscale = d3.scaleLinear()
+.domain([0, d3.max(data,function(d){;return d.beyong_five;})])
+.range([height,0]);
+
+
+//first line generator
+var line_eight= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_eight);});
+
+
+//Second Line Generator
+var line_seven= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_seven);});
+
+var line_six= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_six);});
+
+var line_five= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_five);});
+
+
+//Construct the legend
+var legend_keys =[{name: "8.0+",color: "#900C3F"}, {name: "7_7.9", color: "#C70039"},{name: "6_6.9", color :"#FF5733"}, {name: "5_5.9", color:"#FFC300"}];
+
+var linelegend= svg1.selectAll("rect").data(legend_keys)
+.enter()
+.append("g")
+.attr("class","lineLegend")
+.attr("transform", function(d,i){return "translate(" +width*0.85 +"," + (i*17) +")";});
+
+//THE legend for the first graph
+linelegend.append("text").text(function (d) {return d.name;})
+    .attr("transform", "translate(25,9)"); //align texts with boxes
+
+linelegend.append("rect")
+    .attr("fill", function(d){return d.color;} )
+    .attr("width", 20).attr("height", 10);
+
+
+
+//Now let us construct the path for the first graph
+svg1.append("path")
+.data(data)
+.attr("class","line")
+.attr("d", line_eight(data))
+.style("stroke","#900C3F");
+
+
+svg1.append("path")
+.data(data)
+.attr("class","line")
+.attr("d", line_seven(data))
+.style("stroke","#C70039");
+
+svg1.append("path")
+.attr("class","line")
+.data(data)
+.attr("d", line_six(data))
+.style("stroke","#FF5733");
+
+svg1.append("path")
+.attr("class","line")
+.data(data)
+.attr("d", line_five(data));
+
+
+
+
+
+
+
+
+
+
+//Add the x Axis
+
+svg1.append("g")
+.attr("transform", "translate(0," +height +")")
+.call(d3.axisBottom(xscale));
+
+
+
+
+//add the y axis
+
+svg1.append("g")
+.call(d3.axisLeft(yscale));
+
+
+
+
+// Add the labels of axis
+
+svg1.append("text")
+.attr("transform",   "translate("+ (width/2)+"," + (height +margin.top -10) +")")
+.style("text-anchor", "middle")
+.text("Year");
+
+
+svg1.append("text")
+.attr("transform", "rotate(-90)")
+.attr("y", 20 - margin.left)
+.attr("x", 0-(height/2))
+.attr("dy", "1em")
+.style("text-anchor", "middle")
+.text("Num of Earthquakes");
+
+
+
+
+
+//Add a title
+
+svg1.append("text")
+.attr("x", (width/2))
+.attr("y", 5)
+.style("text-anchor","middle")
+.text("Worldwide Earthquake stats 2000-2015");
+
+
+
+d3.select("body").append("div").attr("class", "pagebreak");
+});
+
+</script>
+
+
+
+
+
+<script>
+// for the second graph svg2
+d3.dsv(",", "../Q3/earthquakes.csv", function(d){return {year: formatYear(d.year), beyong_eight : +d["8.0+"], beyong_seven : +d["7_7.9"], beyong_six : +d["6_6.9"],beyong_five : + d["5_5.9"], estimated_deaths : +d["Estimated Deaths"]};  }).then(function(data){
+
+console.log(data);
+n = data.length;
+  //Scale our x
+var xscale = d3.scaleTime()
+.domain([d3.min(data, function(d){return d.year}), d3.max(data, function(d){return d.year})]) //It might be changed to n-1 if the outcome is not correct
+.range([0,width]);
+
+
+// Scale our y
+
+var yscale = d3.scaleLinear()
+.domain([0, d3.max(data,function(d){;return d.beyong_five;})])
+.range([height,0]);
+
+//scale our circles 
+
+var rscale=d3.scaleLinear()
+.domain([d3.min(data, function(d){return d.estimated_deaths;}),d3.max(data, function(d){return d.estimated_deaths;})])
+.range([10,30]);
+
+
+
+//first line generator
+var line_eight= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_eight);});
+
+
+//Second Line Generator
+var line_seven= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_seven);});
+
+var line_six= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_six);});
+
+var line_five= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_five);});
+
+
+//Construct the legend
+var legend_keys =[{name: "8.0+",color: "#900C3F"}, {name: "7_7.9", color: "#C70039"},{name: "6_6.9", color :"#FF5733"}, {name: "5_5.9", color:"#FFC300"}];
+
+var linelegend= svg2.selectAll("rect").data(legend_keys)
+.enter()
+.append("g")
+.attr("class","lineLegend")
+.attr("transform", function(d,i){return "translate(" +(width*1.05) +"," + (i*17) +")";});
+
+//THE legend for the first graph
+linelegend.append("text").text(function (d) {return d.name;})
+    .attr("transform", "translate(25,9)"); //align texts with boxes
+
+linelegend.append("rect")
+    .attr("fill", function(d){return d.color;} )
+    .attr("width", 20).attr("height", 10);
+
+
+
+//Now let us construct the path for the first graph
+svg2.append("path")
+.data(data)
+.attr("class","line")
+.attr("d", line_eight(data))
+.style("stroke","#900C3F");
+// Create circles for each data points
+svg2.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_eight);})
+.style("fill","#900C3F");
+
+
+
+svg2.append("path")
+.data(data)
+.attr("class","line")
+.attr("d", line_seven(data))
+.style("stroke","#C70039");
+
+svg2.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_seven);})
+.style("fill","#C70039");
+
+
+
+
+svg2.append("path")
+.attr("class","line")
+.data(data)
+.attr("d", line_six(data))
+.style("stroke","#FF5733");
+
+svg2.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_six);})
+.style("fill","#FF5733");
+
+
+
+
+svg2.append("path")
+.attr("class","line")
+.data(data)
+.attr("d", line_five(data));
+
+svg2.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_five);})
+.style("fill","#FFC300");
+
+
+
+
+
+
+
+//Add the x Axis
+
+svg2.append("g")
+.attr("transform", "translate(0," +height +")")
+.call(d3.axisBottom(xscale));
+
+
+
+
+//add the y axis
+
+svg2.append("g")
+.call(d3.axisLeft(yscale));
+
+
+
+
+// Add the labels of axis
+
+svg2.append("text")
+.attr("transform",   "translate("+ (width/2)+"," + (height +margin.top -10) +")")
+.style("text-anchor", "middle")
+.text("Year");
+
+
+svg2.append("text")
+.attr("transform", "rotate(-90)")
+.attr("y", 20 - margin.left)
+.attr("x", 0-(height/2))
+.attr("dy", "1em")
+.style("text-anchor", "middle")
+.text("Num of Earthquakes");
+
+
+
+
+
+//Add a title
+
+svg2.append("text")
+.attr("x", (width/2))
+.attr("y", -5)
+.style("text-anchor","middle")
+.text("Worldwide Earthquake stats 2000-2015 with Symbols");
+
+d3.select("body").append("div").attr("class", "pagebreak");
+
+
+
+});
+
+</script>
+
+
+
+
+
+
+<script>
+// for the Third graph svg2
+d3.dsv(",", "../Q3/earthquakes.csv", function(d){return {year: formatYear(d.year), beyong_eight : +d["8.0+"], beyong_seven : +d["7_7.9"], beyong_six : +d["6_6.9"],beyong_five : + d["5_5.9"], estimated_deaths : +d["Estimated Deaths"]};  }).then(function(data){
+
+console.log(data);
+n = data.length;
+  //Scale our x
+var xscale = d3.scaleTime()
+.domain([d3.min(data, function(d){return d.year}), d3.max(data, function(d){return d.year})]) //It might be changed to n-1 if the outcome is not correct
+.range([0,width]);
+
+
+// Scale our y
+
+var yscale = d3.scaleSqrt()
+.domain([0, d3.max(data,function(d){;return d.beyong_five;})])
+.range([height,0]);
+
+//scale our circles 
+
+var rscale=d3.scaleLinear()
+.domain([d3.min(data, function(d){return d.estimated_deaths;}),d3.max(data, function(d){return d.estimated_deaths;})])
+.range([10,30]);
+
+
+
+//first line generator
+var line_eight= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_eight);});
+
+
+//Second Line Generator
+var line_seven= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_seven);});
+
+var line_six= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_six);});
+
+var line_five= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_five);});
+
+
+//Construct the legend
+var legend_keys =[{name: "8.0+",color: "#900C3F"}, {name: "7_7.9", color: "#C70039"},{name: "6_6.9", color :"#FF5733"}, {name: "5_5.9", color:"#FFC300"}];
+
+var linelegend= svg3.selectAll("rect").data(legend_keys)
+.enter()
+.append("g")
+.attr("class","lineLegend")
+.attr("transform", function(d,i){return "translate(" +width*1.05 +"," + (i*17) +")";});
+
+//THE legend for the first graph
+linelegend.append("text").text(function (d) {return d.name;})
+    .attr("transform", "translate(25,9)"); //align texts with boxes
+
+linelegend.append("rect")
+    .attr("fill", function(d){return d.color;} )
+    .attr("width", 20).attr("height", 10);
+
+
+
+//Now let us construct the path for the first graph
+svg3.append("path")
+.data(data)
+.attr("class","line")
+.attr("d", line_eight(data))
+.style("stroke","#900C3F");
+// Create circles for each data points
+svg3.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_eight);})
+.style("fill","#900C3F");
+
+
+
+svg3.append("path")
+.data(data)
+.attr("class","line")
+.attr("d", line_seven(data))
+.style("stroke","#C70039");
+
+svg3.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_seven);})
+.style("fill","#C70039");
+
+
+
+
+svg3.append("path")
+.attr("class","line")
+.data(data)
+.attr("d", line_six(data))
+.style("stroke","#FF5733");
+
+svg3.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_six);})
+.style("fill","#FF5733");
+
+
+
+
+svg3.append("path")
+.attr("class","line")
+.data(data)
+.attr("d", line_five(data));
+
+svg3.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_five);})
+.style("fill","#FFC300");
+
+
+
+
+
+
+
+//Add the x Axis
+
+svg3.append("g")
+.attr("transform", "translate(0," +height +")")
+.call(d3.axisBottom(xscale));
+
+
+
+
+//add the y axis
+
+svg3.append("g")
+.call(d3.axisLeft(yscale));
+
+
+
+
+// Add the labels of axis
+
+svg3.append("text")
+.attr("transform",   "translate("+ (width/2)+"," + (height +margin.top -10) +")")
+.style("text-anchor", "middle")
+.text("Year");
+
+
+svg3.append("text")
+.attr("transform", "rotate(-90)")
+.attr("y", 20 - margin.left)
+.attr("x", 0-(height/2))
+.attr("dy", "1em")
+.style("text-anchor", "middle")
+.text("Num of Earthquakes");
+
+
+
+
+
+//Add a title
+
+svg3.append("text")
+.attr("x", (width/2))
+.attr("y", -10)
+.style("text-anchor","middle")
+.text("Worldwide Earthquake stats 2000-2015 Square Root Scale");
+
+
+
+d3.select("body").append("div").attr("class", "pagebreak");
+
+});
+
+
+
+
+
+</script>
+
+
+
+
+<script>
+//For the forth graph
+
+d3.dsv(",", "../Q3/earthquakes.csv", function(d){return {year: formatYear(d.year), beyong_eight : (+d["8.0+"] +1), beyong_seven : (+d["7_7.9"]+1), beyong_six : (+d["6_6.9"]+1),beyong_five : (+ d["5_5.9"]+1), estimated_deaths : +d["Estimated Deaths"]};  }).then(function(data){
+
+console.log(data);
+n = data.length;
+  //Scale our x
+var xscale = d3.scaleTime()
+.domain([d3.min(data, function(d){return d.year}), d3.max(data, function(d){return d.year})]) //It might be changed to n-1 if the outcome is not correct
+.range([0,width]);
+
+
+// Scale our y
+
+var yscale = d3.scaleLog()
+.domain([1e+0, 2e+3])
+.range([height,0]);
+
+//scale our circles 
+
+var rscale=d3.scaleLinear()
+.domain([d3.min(data, function(d){return d.estimated_deaths;}),d3.max(data, function(d){return d.estimated_deaths;})])
+.range([10,30]);
+
+
+
+//first line generator
+var line_eight= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_eight);});
+
+
+//Second Line Generator
+var line_seven= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_seven);});
+
+var line_six= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_six);});
+
+var line_five= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.beyong_five);});
+
+
+//Construct the legend
+var legend_keys =[{name: "8.0+",color: "#900C3F"}, {name: "7_7.9", color: "#C70039"},{name: "6_6.9", color :"#FF5733"}, {name: "5_5.9", color:"#FFC300"}];
+
+var linelegend= svg4.selectAll("rect").data(legend_keys)
+.enter()
+.append("g")
+.attr("class","lineLegend")
+.attr("transform", function(d,i){return "translate(" +width*1.05 +"," + (i*17) +")";});
+
+//THE legend for the first graph
+linelegend.append("text").text(function (d) {return d.name;})
+    .attr("transform", "translate(25,9)"); //align texts with boxes
+
+linelegend.append("rect")
+    .attr("fill", function(d){return d.color;} )
+    .attr("width", 20).attr("height", 10);
+
+
+
+//Now let us construct the path for the first graph
+svg4.append("path")
+.data(data)
+.attr("class","line")
+.attr("d", line_eight(data))
+.style("stroke","#900C3F");
+// Create circles for each data points
+svg4.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_eight);})
+.style("fill","#900C3F");
+
+
+
+svg4.append("path")
+.data(data)
+.attr("class","line")
+.attr("d", line_seven(data))
+.style("stroke","#C70039");
+
+svg4.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_seven);})
+.style("fill","#C70039");
+
+
+
+
+svg4.append("path")
+.attr("class","line")
+.data(data)
+.attr("d", line_six(data))
+.style("stroke","#FF5733");
+
+svg4.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_six);})
+.style("fill","#FF5733");
+
+
+
+
+svg4.append("path")
+.attr("class","line")
+.data(data)
+.attr("d", line_five(data));
+
+svg4.selectAll("line-circle")
+.data(data)
+.enter().append("circle")
+.attr("class","data-circle")
+.attr("r",function(d){return rscale(d.estimated_deaths);})
+.attr("cx", function(d) {return xscale(d.year);})
+.attr("cy", function(d){return yscale(d.beyong_five);})
+.style("fill","#FFC300");
+
+
+
+
+
+
+
+//Add the x Axis
+
+svg4.append("g")
+.attr("transform", "translate(0," +height +")")
+.call(d3.axisBottom(xscale));
+
+
+
+
+//add the y axis
+
+svg4.append("g")
+.call(d3.axisLeft(yscale));
+
+
+
+
+// Add the labels of axis
+
+svg4.append("text")
+.attr("transform",   "translate("+ (width/2)+"," + (height +margin.top -10) +")")
+.style("text-anchor", "middle")
+.text("Year");
+
+
+svg4.append("text")
+.attr("transform", "rotate(-90)")
+.attr("y", 20 - margin.left)
+.attr("x", 0-(height/2))
+.attr("dy", "1em")
+.style("text-anchor", "middle")
+.text("Num of Earthquakes");
+
+
+
+
+
+//Add a title
+
+svg4.append("text")
+.attr("x", (width/2))
+.attr("y", -15)
+.style("text-anchor","middle")
+.text("Worldwide Earthquake stats 2000-2015 Log Scale");
+
+
+
+d3.select("body").append("div").attr("class", "pagebreak");
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	</script>
+
+
+
+
+</body>
+
+
+
+
+
+
+</html>
+
+
+
+
+

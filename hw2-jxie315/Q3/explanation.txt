@@ -1,0 +1,2 @@
+  A linear scaling, sometimes, might not be situable for visualizing data tendency which either increases or decreases nonlinearly. In this case, the data with lower value are too  
+crowded around the bottom axis. Thus, an nonlinear works well eliminating the bias over the difference between the data with lower value. 

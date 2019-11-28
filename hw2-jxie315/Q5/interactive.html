@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<script type= "text/javascript "src="../lib/d3.v5.min.js"></script>
+<style type ="text/css">
+
+	.line{
+		fill: none;
+		stroke: #ffab00;
+		stroke-width:3; 
+	}
+
+	.overlay
+	{
+		fill: none;
+		pointer-events:all;
+
+
+	}
+
+	.fun
+	{
+		fill: none
+		stroke: steelblue;
+		font: italic;
+	}
+	.title{
+	font-size: 24px;
+	text-anchor: middle;
+	text-align: center;
+
+}
+
+</style>
+</head>
+<body>
+	<div class= "title">US Earthquakes by Region 2010-2015</div>
+	<script type = "text/javascript">
+  var margin = {top:50, right: 100, bottom:50, left:200},
+  width = 1000-margin.left-margin.right,
+  height = 400 - margin.top - margin.bottom;
+
+
+  var timeFormat = d3.timeParse("%Y");
+//Define scale functions
+
+var xscale=d3.scaleTime().range([0,width]);
+var yscale=d3.scaleLinear().range([height,0]);
+
+var colors = ["green", "purple", "blue","red"];
+
+var legend_keys =[{key: "South", color: "green"}, {key: "West", color: "purple"}, {key: "Northeast", color: "blue"}, {key: "Midwest", color: "red"}];
+
+
+var svg=d3.select("body").append("svg") //For the first graph
+.attr("width", width+margin.left+margin.right)
+.attr("height", height +margin.top + margin.bottom).append("g")
+.attr("transform", "translate(" +margin.left + "," + margin.top+ ")");
+
+var svg1=d3.select("body").append("svg") //For the first graph
+.attr("width", width+margin.left+margin.right)
+.attr("height", height +margin.top+margin.bottom).append("g")
+.attr("transform", "translate(" +margin.left + "," + margin.top+ ")");
+
+
+d3.dsv(",", "../Q5/state-year-earthquakes.csv", function(d){
+
+
+
+return {year: timeFormat(d.year), state: d.state, region: d.region, count: +d.count };
+
+}).then(function(d){
+
+
+
+//xscale.domain([d3.min(d, function(d){return d.year;}), d3.max(d => d.year)]);
+//yscale.domain([d3.min(d => d.count), d3.max( d=> d.count)]);
+
+
+// Let us nest the data in order to group by range
+
+var nest = d3.nest()
+.key(function(d) {return d.region;})
+.entries(d); //Nest does not work, find an empty set ///works!!!!!!!!!!!
+
+
+
+
+
+
+var regions = nest.map(function(d){return d.key;});
+
+
+
+console.log(nest);
+
+
+
+
+
+//Draw lines
+
+function draw(region,i){
+//Let us filter the data first
+
+var data_filter = nest.find(
+
+function (d)
+{
+	return d.key==region;
+});
+
+
+
+//console.log(data_filter);// Check works!!
+
+var data = data_filter.values;
+
+var data_new = [],
+
+data_count=[0,0,0,0,0,0];
+years = ["2010", "2011", "2012", "2013", "2014", "2015"]
+//Sum the data
+
+data.forEach(function(d) // sum the counts
+{
+	for (var counter=0; counter<6; counter++)
+	{if (d.year.getTime()==timeFormat(years[counter]).getTime())
+	{
+		data_count[counter] =data_count[counter]+ d.count;
+
+	}}
+
+
+});
+
+for (var counter =0; counter < 6; counter ++)
+{
+
+	var inted={
+		year: timeFormat((2010+counter)), count: data_count[counter], values: data_filter.values , region: region// add the filtered value to the new data structure
+
+	};
+
+
+	data_new.push(inted);
+}
+
+
+console.log(data_new);
+
+//domain
+yscale.domain([0,3000]);
+xscale.domain([d3.min(data_new, d=> d.year), d3.max(data_new, d => d.year)]);
+
+
+
+//first line generator
+var linegenerator= d3.line()
+.x(function(d){return xscale(d.year);})
+.y(function(d){return yscale(d.count);});
+
+
+
+svg
+.append("path")
+.data(data_new)
+.attr("class", "line")
+.attr("d", linegenerator(data_new))
+.style("stroke", colors[i]);
+
+
+
+
+
+
+
+
+
+
+
+//Add small circle to the lines
+
+svg.selectAll("line_circle")
+.data(data_new)
+.enter()
+.append("circle")
+.attr("class","data-circle")
+.attr("r", 5)
+.attr("cx", d => xscale(d.year))
+.attr('cy', d=> yscale(d.count))
+.style("fill", colors[i])
+
+//Add the mouse effect
+/*======================================================================================*/
+.on("mouseover", function(d){
+
+
+
+
+
+
+//This will enpand the size of circle
+d3.select(this).attr("r",10);
+
+
+
+
+ var data= d.values//This is an array
+// console.log(d.values);
+var year= d.year;
+
+
+var nest= d3.nest()
+.key(function(d){return d.state;})
+.entries(data);
+
+var states = nest.map(d => d.key);
+//We have attained the states name for each case
+
+//console.log(states);//Works
+
+
+ var data_new1 =[];
+states.forEach(function(d)
+{
+
+  var inted={};
+
+  inted.state = d;
+  inted.count=0; //initialize the data structure
+
+  data_new1.push(inted);
+
+  //push the data into the array, we will modify the value of count inside the array in the next loop 
+
+});
+//console.log(data_new); //Oh my God!!! this finally successes!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+ data.forEach(
+function(d){
+
+
+    data_new1.forEach(function(data)
+     {   
+     	if(d.state==data.state && d.year.getTime() == year.getTime())
+     	{
+     		data.count= data.count + d.count;
+     	}
+
+
+     });
+
+
+
+
+
+}); //This is the end of the for each function
+
+//console.log(data_new);//Success!!!!!!!!!!!!
+
+
+
+
+data_new1 = data_new1.sort(function(a,b){
+
+if(a.count != b.count)
+{return d3.descending(a.count,b.count);}
+
+else
+{
+	return d3.descending(a.state,b.state);
+}
+
+
+
+
+
+
+});
+console.log(data_new1);
+
+//Let us draw the table
+/*=======================================================*/
+
+//Add a title
+
+svg1.append("text").attr("class", "in title").attr("x", width/2).attr("y",-5).text( d.region+ "ern Region Earthquakes "+year.getFullYear());
+//.style("text-align", "middle");
+
+
+
+//scale first
+var y_element = d3.set(data_new1.map(function(item) {return item.state;})).values();
+
+console.log(y_element);
+
+var Yscale = d3.scaleBand().range([ 0, height]).domain(y_element);
+
+var Xscale = d3.scaleLinear().range([0,width]).domain([d3.min(data_new1, d=> d.count),  d3.max(data_new1, d=> d.count) ]);
+
+//Add axis for the interactive tables
+
+//Add grid line to the x axis
+function grid() {		
+    return d3.axisBottom(Xscale).ticks(9);
+        
+}
+
+
+
+
+svg1.append("g")
+.attr("class", "in xaxis")
+.attr("transform", "translate(0," +height + ")")
+.call(d3.axisBottom(Xscale));
+//.call(grid().tickSize(-height).tickFormat(""));
+
+svg1.append("g")
+.attr("class","in yaxis")
+.call(d3.axisLeft(Yscale));
+
+
+// add the Y gridlines
+ svg1.append("g")			
+      .attr("class", "in grid")
+      .call( grid()
+          .tickSize(height)
+          .tickFormat("")
+      )
+
+
+
+
+
+var drawbar = svg1.selectAll(".in rect")
+.data(data_new1)
+.enter()
+.append("rect")
+.attr("class","in rect")
+.attr("x",0)
+.attr("y", d=> Yscale(d.state))
+.attr("height", 0.96*(height/data_new1.length))
+.attr("width", d=> Xscale(d.count) )
+.attr("fill", "steelblue");
+
+
+
+
+
+
+
+/*=======================================================*/
+
+
+})
+.on("mouseout", function() { 
+
+
+
+
+
+//This will enpand the size of circle
+d3.select(this).attr("r",5);
+
+
+
+	d3.selectAll(".in").remove()
+;});
+
+
+/*
+
+
+
+
+
+/*=================================================================================*/
+
+
+
+
+
+
+
+
+
+
+if(i==3)//If this is the last step of drawing, append axis
+{ svg.append("g")
+.attr("class", "x axis")
+.attr("transform", "translate(0," +height + ")")
+.call(d3.axisBottom(xscale));
+
+svg.append("g")
+.attr("class","y axis")
+.call(d3.axisLeft(yscale));
+
+//Draw the legend
+
+
+
+var legend = svg.selectAll("circle_legend").data(legend_keys)
+.enter()
+.append("g")
+.attr("class", "legend")
+.attr("transform" , function(d,i){return "translate(" +width *0.85 +"," +(i*17) +")";});
+
+
+legend.append("text").text(d => d.key)
+.attr("transform", "translate(25,4)");
+
+legend.append("circle")
+.attr("fill", d=> d.color)
+.attr("r",5);
+
+
+
+
+
+
+
+
+}
+
+} // This is the end of the draw function
+
+
+//Let us call the draw function
+
+for (var counter =0; counter< 4; counter ++)
+{
+	draw(regions[counter], counter);
+}
+
+
+
+
+
+
+
+
+
+  
+});
+
+
+
+
+</script>
+
+</body>

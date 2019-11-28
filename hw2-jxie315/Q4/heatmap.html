@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+
+<head>
+
+<meta charset="utf-8">
+
+<script type="text/javascript" src = "../lib/d3.v5.min.js"></script>
+
+<style>
+.title{
+	font-size: 24px;
+	font-weight:bold;
+ 
+}
+
+#container {display: flex;
+
+justify-content: left;
+
+cursor: pointer;
+
+}
+
+</style>
+
+</head>
+
+<body>
+<div class="title">Visualizing Earthquakes Counts by States 2010-2015(M3+)</div>
+<div id="container">
+	<div class="nav left">Range of</div>
+	<div id="categoryselect"></div>
+	<div class="nav right"></div>
+
+
+
+
+
+</div>
+
+
+
+<script type = "text/javascript">
+
+  var margin = {top:20, right: 90, bottom:200, left:90};
+
+  var width = window.innerWidth - margin.left - margin.right,
+
+  height =window.innerHeight -margin.bottom - margin.top;
+
+  var gridSize= Math.floor(width/30);
+
+var cellSize= gridSize-1;
+
+
+var color_range= ['#f7fcfd','#e5f5f9','#ccece6','#99d8c9','#66c2a4','#41ae76','#238b45','#006d2c','#00441b'];
+
+var xStep=10;
+var yStep=864e5;
+
+var itemSize=30;
+var cellsize= itemSize -1;
+
+
+var formatYear= d3.timeParse("%Y");
+
+
+
+
+
+
+
+
+
+d3.dsv(",", "../Q4/earthquakes.csv", function(d){
+
+
+
+
+return {
+
+2010 : +d[2010],
+2011: +d[2011],
+2012:+d[2012],
+2013: +d[2013],
+2014: +d[2014],
+2015: +d[2015],
+category: d["Category"],
+states: d["States"]
+};
+
+
+
+
+
+
+
+
+}).then(function(data) {
+
+
+
+//Let us reshape the data over here
+var  array=[];
+
+
+data.forEach(function(d) {
+
+
+for (var count =0; count <6 ; count++)
+{var inted= { year: formatYear((2015-count)),
+
+	value: d[(2015-count)],
+
+	category: d.category,
+
+	states: d.states};
+
+
+
+array.push(inted);
+
+}});
+
+
+
+var dataset=array;
+
+//=======================================================================
+//let us group the data by category
+
+var nest = d3.nest()
+.key(function(d){return d.category;})
+.entries(dataset);
+
+console.log(dataset);
+console.log(nest);//check that works
+
+var category= nest.map(function(d){return d.key;});
+var index =0;
+
+console.log(category); // check
+//Works!!!!!!!
+
+//create category select menu
+
+
+var menu = d3.select("#categoryselect");
+
+menu.append("select")
+.attr("id","categoryMenu")
+.selectAll("option")
+.data(category)
+.enter()
+.append("option")
+.attr("value",function(d,i){return i;})
+.text(function(d){return d;});
+
+//Let us define the graph function first
+
+//filter the data
+function drawmap(category){
+var selected_data = nest.find(function(d) // This will find the data matched up the selecting condition
+{
+	return d.key==category;
+});
+
+
+
+var svg=d3.select("body").append("svg") 
+.attr("width", width+margin.left+margin.right)
+.attr("height", height +margin.top + margin.bottom).append("g")
+.attr("transform", "translate(" +margin.left + "," + margin.top+ ")");
+
+
+
+var yscale = d3.scaleTime().range([height,gridSize]),
+colscale = d3.scaleLinear().range(color_range);
+
+var xscale = d3.scaleBand().range([0,width]);
+
+var x_element = d3.set(selected_data.values.map(function(item) {return item.states;})).values();
+
+
+
+var min = d3.min(selected_data.values, function(d){return d.value;}),
+  max= d3.max(selected_data.values, function(d){return d.value;}),
+  gap= Math.floor((max-min)/9);
+
+
+
+//Our awesome graphing code starts here!!!!!!!
+
+yscale.domain([d3.max(selected_data.values, function(d){return d.year;}),   d3.min(selected_data.values, function(d){return d.year;})]);
+xscale.domain(x_element);
+colscale.domain(d3.range(min,max,gap));
+
+console.log(selected_data);
+var graph = svg.selectAll(".box")
+.data(selected_data.values)
+.enter()
+.append("rect");
+
+graph
+.attr("class", "box")
+.attr("x", function(d){return xscale(d.states);})
+.attr("y",function(d){return yscale(d.year)+gridSize/2 ;})
+.attr("height", gridSize )
+.attr("width", width/(selected_data.values.length /6)*0.99)
+.style("fill", function (d) {return colscale(d.value);})
+.on("mouseover", function(d) { 
+	svg.append("text")
+	.attr("class", "display")
+	.attr("x", width/2)
+	.attr("y", -margin.top/10)
+	.text(function() {return d.states + " " + d.year.getFullYear()+ ": " + d.value;});
+
+
+
+
+
+
+   })
+.on("mouseout", function(d){ d3.selectAll(".display").remove();});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var xaxis = svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + (height+gridSize*3/2) + ")");
+
+      xaxis
+      .transition()
+      .duration(1500)
+      .call(d3.axisBottom(xscale))
+    .selectAll("text")
+      .attr("class", "label")
+      .attr("x", -5)
+      .attr("y",0)
+      .attr("dy", ".35em")
+      .attr("transform", "rotate(300)")
+      .style("text-anchor", "end");
+  
+     
+
+
+
+
+
+var yaxis= svg.append("g")
+.transition()
+.duration(500)
+.attr("class","y axis")
+.transition()
+.attr("transform","translate(0," +(gridSize) +")")
+.call(d3.axisLeft(yscale));
+
+
+
+//create a legend
+
+var legend = svg.selectAll(".legend")
+.data(colscale.ticks(9))
+.enter()
+.append("g")
+.attr("transform", function(d,i){return "translate(" +(i*70) +", "+ (height+margin.bottom/2) +")";})
+.attr("class","legend");
+
+
+legend.append("rect")
+.attr("width",80)
+.attr("height", 38 )
+.style("fill",colscale);
+
+legend.append("text")
+.attr("class","label")
+.attr("x", 0)
+.attr("y", 50)
+.text(String);
+
+svg.append("text")
+.attr("class","legend'slabel")
+.attr("x" ,-margin.left/2)
+.attr("y", height+margin.bottom/2 +18)
+.text("Count");
+
+
+
+
+}
+
+
+
+
+
+
+
+drawmap(category[index]);
+
+//This is our updated function
+
+
+
+
+
+
+
+
+menu.on("change", function()
+{
+
+
+d3.selectAll("svg").remove();
+var selection = d3.select(this)
+.select("select")
+.property("value");
+
+index= + selection;
+
+console.log(index);
+
+drawmap(category[index]);
+
+
+
+}); //This is the end of the menu.on function
+
+
+
+
+
+
+
+
+
+
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+</body>

@@ -1,0 +1,45 @@
+
+
+Note: I use ggplot2, the graphing package in Rstudio, to make a comparsion to D3 and Tableau.
+
+1.Ease to develop
+
+R: The complex functionality over ggplot2, which takes into account issues coming from data structure, scaling, design, is difficult.
+
+Taleau: The developer extremely goes after expanding the degree of usability and simplication. 
+
+d3: The developers for d3 only build the functionality over data visualization problems. Operations can be diverse.
+
+2.Ease to maintain the visualization
+
+R: There is still easy to maintain visualization because ggplot2 only cares about parameters.
+Tableau: No way to maintain visulization because there is no programming.
+D3: the Best way to deal with dynamic data so far I have seen
+
+
+3. Usability of visualization for ended users
+
+R: easy, only parameters changing
+
+Tableau: easy, only mouse clicking
+
+d3: tough, I almost cry, fundamental programming
+
+
+4.Scalability of visualiaztion to "large" datasets
+
+R: actually not that easy, because it runs slowly when handling larger dataset
+
+Tableau: Not good, algorithms does not work well for millions of data
+
+d3: Good for me so far.
+
+5.System requirments
+
+R: I did go crazy to find out the problems on different versions.
+
+Tableau: I need to pay money for using it !!
+
+d3: free, no system requirments
+
+
